@@ -746,7 +746,7 @@ data:
 
 [quote]
 ____
-*`uid: "prometheus"`* – Jedes Panel verweist auf die Datenquelle über `"uid": "prometheus"`. Diese UID muss *genau übereinstimmen* mit der, die in der von der Tiltfile generierten Datenquellen-ConfigMap deklariert ist (siehe nächster Abschnitt). Wenn das JSON `${DS_PROMETHEUS}` verwendet (Grafana UI-Importsyntax), wird das Sidecar diese Variable *nicht* auflösen – Sie müssen die hardcodierte UID verwenden.
+*`uid: "prometheus"`* – Jedes Panel verweist auf die Datenquelle über `"uid": "prometheus"`. Diese UID muss *genau übereinstimmen* mit der, die in der von der Tiltfile generierten Datenquellen-ConfigMap deklariert ist (siehe nächster Abschnitt). Wenn das JSON `$\{DS_PROMETHEUS}` verwendet (Grafana UI-Importsyntax), wird das Sidecar diese Variable *nicht* auflösen – Sie müssen die hardcodierte UID verwenden.
 ____
 
 Das Dashboard enthält 8 Panels:
@@ -957,7 +957,7 @@ data:
 
 *`docker_build_with_restart`* – Die `restart_process` Erweiterung löst ein Problem, das spezifisch für interpretierte Sprachen ist. Wenn `live_update` eine Datei in den Container synchronisiert, sieht Node.js sie nicht – der Code ist bereits im Speicher geladen. `docker_build_with_restart` umschließt den Einstiegspunkt, um den Prozess nach jeder Synchronisierung automatisch neu zu starten. Für kompilierte Sprachen (Go, Rust) ist ein Standard `docker_build` mit einem Kompilierungsschritt in `run()` der übliche Ansatz.
 
-*Prometheus-Datenquelle als ConfigMap* – Anstatt Prometheus in der Grafana UI zu konfigurieren (manuelle Konfiguration geht beim Redeployment verloren), generiert die Tiltfile eine ConfigMap mit dem `grafana_datasource: "1"`-Label. Der Grafana Sidecar erkennt es und stellt die Verbindung automatisch bereit. Die Prometheus-URL wird dynamisch injiziert: `http://{detected-service-name}:80`.
+*Prometheus-Datenquelle als ConfigMap* – Anstatt Prometheus in der Grafana UI zu konfigurieren (manuelle Konfiguration geht beim Redeployment verloren), generiert die Tiltfile eine ConfigMap mit dem `grafana_datasource: "1"`-Label. Der Grafana Sidecar erkennt es und stellt die Verbindung automatisch bereit. Die Prometheus-URL wird dynamisch injiziert: `\http://<detected-service-name>:80`.
 
 *`links`* – Jede `local_resource` und `k8s_resource` kann klickbare Links im Tilt-Dashboard deklarieren. Sie sehen die URLs für Grafana, Prometheus und das spezifische Dashboard direkt in der Tilt UI.
 

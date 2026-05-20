@@ -745,7 +745,7 @@ data:
 
 [quote]
 ____
-*`uid: "prometheus"`* – 各パネルは`"uid": "prometheus"`によってデータソースを参照します。このuidはTiltfileによって生成されたデータソースConfigMapに宣言されたものと*正確に一致する必要があります*（次のセクションを参照）。JSONが`${DS_PROMETHEUS}`（Grafana UIインポート構文）を使用している場合、サイドカーはその変数を*解決しません*。ハードコーディングされたuidを使用する必要があります。
+*`uid: "prometheus"`* – 各パネルは`"uid": "prometheus"`によってデータソースを参照します。このuidはTiltfileによって生成されたデータソースConfigMapに宣言されたものと*正確に一致する必要があります*（次のセクションを参照）。JSONが`$\{DS_PROMETHEUS}`（Grafana UIインポート構文）を使用している場合、サイドカーはその変数を*解決しません*。ハードコーディングされたuidを使用する必要があります。
 ____
 
 ダッシュボードには8つのパネルがあります：
@@ -956,7 +956,7 @@ data:
 
 *`docker_build_with_restart`* – `restart_process`拡張は、解釈型言語特有の問題を解決します。`live_update`がファイルをコンテナに同期すると、Node.jsはそれを認識しません – コードはすでにメモリにロードされています。`docker_build_with_restart`はエントリポイントをラップして、各同期後にプロセスを自動的に再起動します。コンパイル言語（Go、Rust）では、`docker_build`にコンパイルステップを含む`run()`標準的なアプローチが一般的です。
 
-*ConfigMapとしてのPrometheusデータソース* – Grafana UIでPrometheusを設定するのではなく（手動設定は再デプロイ時に失われます）、Tiltfileは`grafana_datasource: "1"`ラベルを持つConfigMapを生成します。Grafanaサイドカーはそれを検出し、自動的に接続をプロビジョニングします。PrometheusのURLは動的に注入されます：`http://{detected-service-name}:80`。
+*ConfigMapとしてのPrometheusデータソース* – Grafana UIでPrometheusを設定するのではなく（手動設定は再デプロイ時に失われます）、Tiltfileは`grafana_datasource: "1"`ラベルを持つConfigMapを生成します。Grafanaサイドカーはそれを検出し、自動的に接続をプロビジョニングします。PrometheusのURLは動的に注入されます：`\http://<detected-service-name>:80`。
 
 *`links`* – 各`local_resource`と`k8s_resource`はTiltダッシュボードにクリック可能なリンクを宣言できます。Tilt UIでGrafana、Prometheus、および特定のダッシュボードのURLを直接確認できます。
 

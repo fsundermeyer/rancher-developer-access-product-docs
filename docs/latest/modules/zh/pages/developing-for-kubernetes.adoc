@@ -745,7 +745,7 @@ data:
 
 [quote]
 ____
-*`uid: "prometheus"`* – 每个面板通过 `"uid": "prometheus"` 引用数据源。此 uid 必须 *完全匹配* Tiltfile 生成的数据源 ConfigMap 中声明的 uid（见下一节）。如果 JSON 使用 `${DS_PROMETHEUS}`（Grafana UI 导入语法），边车 将 *不* 解析该变量 – 您必须使用硬编码的 uid。
+*`uid: "prometheus"`* – 每个面板通过 `"uid": "prometheus"` 引用数据源。此 uid 必须 *完全匹配* Tiltfile 生成的数据源 ConfigMap 中声明的 uid（见下一节）。如果 JSON 使用 `$\{DS_PROMETHEUS}`（Grafana UI 导入语法），边车 将 *不* 解析该变量 – 您必须使用硬编码的 uid。
 ____
 
 仪表板包含8个面板：
@@ -956,7 +956,7 @@ data:
 
 *`docker_build_with_restart`* – `restart_process`扩展解决了特定于解释性语言的问题。当`live_update`将文件同步到容器中时，Node.js并没有看到它——代码已经加载到内存中。`docker_build_with_restart`包装入口点，以便在每次同步后自动重启进程。对于编译语言（Go，Rust），标准的`docker_build`在`run()`中有一个编译步骤是常见的方法。
 
-*将Prometheus数据源作为ConfigMap* – 与其在Grafana UI中配置Prometheus（手动配置在重新部署时丢失），Tiltfile生成一个带有`grafana_datasource: "1"`标签的ConfigMap。Grafana边车检测到它并自动配置连接。Prometheus URL是动态注入的：`http://{detected-service-name}:80`。
+*将Prometheus数据源作为ConfigMap* – 与其在Grafana UI中配置Prometheus（手动配置在重新部署时丢失），Tiltfile生成一个带有`grafana_datasource: "1"`标签的ConfigMap。Grafana边车检测到它并自动配置连接。Prometheus URL是动态注入的：`\http://<detected-service-name>:80`。
 
 *`links`* – 每个`local_resource`和`k8s_resource`可以在Tilt仪表板中声明可点击的链接。您可以直接在Tilt UI中看到Grafana、Prometheus和特定仪表板的URL。
 

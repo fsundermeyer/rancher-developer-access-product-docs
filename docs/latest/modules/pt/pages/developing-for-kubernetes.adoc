@@ -745,7 +745,7 @@ data:
 
 [quote]
 ____
-*`uid: "prometheus"`* – Cada painel referencia a fonte de dados por `"uid": "prometheus"`. Este uid deve *corresponder exatamente* ao declarado no ConfigMap da fonte de dados gerado pelo Tiltfile (veja a próxima seção). Se o JSON usar `${DS_PROMETHEUS}` (sintaxe de importação da UI do Grafana), o sidecar *não* resolverá essa variável – você deve usar o uid codificado.
+*`uid: "prometheus"`* – Cada painel referencia a fonte de dados por `"uid": "prometheus"`. Este uid deve *corresponder exatamente* ao declarado no ConfigMap da fonte de dados gerado pelo Tiltfile (veja a próxima seção). Se o JSON usar `$\{DS_PROMETHEUS}` (sintaxe de importação da UI do Grafana), o sidecar *não* resolverá essa variável – você deve usar o uid codificado.
 ____
 
 O painel contém 8 painéis:
@@ -956,7 +956,7 @@ data:
 
 *`docker_build_with_restart`* – A extensão `restart_process` resolve um problema específico de linguagens interpretadas. Quando `live_update` sincroniza um arquivo no contêiner, o Node.js não o vê – o código já está carregado na memória. `docker_build_with_restart` envolve o ponto de entrada para reiniciar automaticamente o processo após cada sincronização. Para linguagens compiladas (Go, Rust), um padrão `docker_build` com uma etapa de compilação em `run()` é a abordagem usual.
 
-*Fonte de dados do Prometheus como ConfigMap* – Em vez de configurar o Prometheus na interface do Grafana (configuração manual perdida na reimplantação), o Tiltfile gera um ConfigMap com o rótulo `grafana_datasource: "1"`. O sidecar do Grafana o detecta e provisiona automaticamente a conexão. A URL do Prometheus é injetada dinamicamente: `http://{detected-service-name}:80`.
+*Fonte de dados do Prometheus como ConfigMap* – Em vez de configurar o Prometheus na interface do Grafana (configuração manual perdida na reimplantação), o Tiltfile gera um ConfigMap com o rótulo `grafana_datasource: "1"`. O sidecar do Grafana o detecta e provisiona automaticamente a conexão. A URL do Prometheus é injetada dinamicamente: `\http://<detected-service-name>:80`.
 
 *`links`* – Cada `local_resource` e `k8s_resource` podem declarar links clicáveis no painel do Tilt. Você vê as URLs para Grafana, Prometheus e o painel específico diretamente na interface do Tilt.
 
