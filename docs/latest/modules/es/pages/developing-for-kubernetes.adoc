@@ -7,12 +7,14 @@
 
 _Del entorno de desarrollo al despliegue – Bucle Interno, Observabilidad, GitOps_
 
+[#_1_overview_why_this_guide]
 == 1. Resumen: ¿por qué esta guía?
 
 Esta guía cubre la *cadena de valor completa* del desarrollo en Kubernetes, desde la configuración inicial del entorno hasta el despliegue continuo. El objetivo: permitir que un desarrollador sea productivo rápidamente utilizando herramientas populares, un clúster local (Rancher Desktop) y imágenes de confianza (Colección de Aplicaciones SUSE).
 
 Está estructurada en dos partes: primero, una *demostración práctica* que te permite empezar a funcionar en minutos. Luego, una sección *Más allá* que cubre el ecosistema más amplio (Dev Containers, Testcontainers, mirrord, Helm, seguridad, GitOps) para cuando estés listo para profundizar en tu flujo de trabajo.
 
+[#_1_1_the_two_loops_of_cloud_native_development]
 === 1.1 Los dos bucles del desarrollo nativo en la nube
 
 |===
@@ -40,13 +42,16 @@ ____
 *Principio clave* – El bucle interno debe ser lo más rápido posible. Cada segundo ahorrado en el ciclo de código-construcción-despliegue-prueba se multiplica por el número de cambios diarios. Un buen bucle interno significa pasar de 5-10 minutos a 5-10 segundos por iteración.
 ____
 
+[#_2_overall_architecture]
 == 2. Arquitectura general
 
+[#_2_1_diagram]
 === 2.1 Diagrama
 
 .Arquitectura del Bucle Interno y Bucle Externo – mismas bases de SUSE de confianza en ambos lados
 image::inner-outer-loop.png[Arquitectura del Bucle Interno y Bucle Externo – mismas bases de SUSE de confianza en ambos lados]
 
+[#_2_2_stack_layers]
 === 2.2 Capas de pila
 
 |===
@@ -89,12 +94,15 @@ image::inner-outer-loop.png[Arquitectura del Bucle Interno y Bucle Externo – m
 | Despliegue declarativo desde Git
 |===
 
+[#_3_setting_up_rancher_desktop]
 == 3. Configuración de Rancher Desktop
 
+[#_3_1_what_is_rancher_desktop]
 === 3.1 ¿Qué es Rancher Desktop?
 
 Rancher Desktop es una aplicación de escritorio de código abierto que proporciona un *clúster local de Kubernetes* (k3s) y un *entorno de ejecución de contenedor* (dockerd o containerd), todo dentro de una VM gestionada automáticamente. No es necesario instalar Docker Desktop.
 
+[#_3_2_installation_and_configuration]
 === 3.2 Instalación y configuración
 
 . *Descargar* desde https://rancherdesktop.io[rancherdesktop.io].
@@ -119,6 +127,7 @@ ____
 *Rancher Desktop no es Docker Desktop.* No necesitas Docker Desktop. Rancher Desktop proporciona su propio daemon de Docker (moby/dockerd). Tener ambos instalados puede crear conflictos de socket. Desactiva Docker Desktop si lo tienes.
 ____
 
+[#_3_3_why_dockerd_moby_when_production_runs_containerd]
 === 3.3 ¿Por qué dockerd (moby) cuando la producción utiliza containerd?
 
 En producción, Kubernetes utiliza *containerd* como entorno de ejecución de contenedor. Aquí está la clave: *Rancher Desktop también lo hace, incluso en modo moby.* El clúster k3s siempre se ejecuta en containerd, independientemente de la configuración. Elegir "`dockerd (moby)`" no reemplaza containerd; añade el daemon de Docker junto a él, y ambos comparten el mismo almacén de imágenes.
@@ -158,8 +167,10 @@ ____
 
 Esta es también la razón por la que los despliegues de K8s de demostración utilizan `imagePullPolicy: IfNotPresent` (o `Never`): le decimos a k3s "`use the local image, do not look in a registry`".
 
+[#_4_suse_application_collection]
 == 4. SUSE Colección de Aplicaciones
 
+[#_4_1_what_is_suse_application_collection]
 === 4.1 ¿Qué es la Colección de Aplicaciones SUSE?
 
 *Colección de Aplicaciones SUSE* es una colección de aplicaciones en forma de imágenes de contenedor y gráficos de Helm, construidas, empaquetadas, endurecidas y mantenidas por SUSE – con construcciones de grado SLSA L3 y todos los metadatos necesarios para mantener las operaciones serenas. Es la fuente de confianza para construir aplicaciones en Kubernetes.
@@ -175,6 +186,7 @@ Disponibles en forma de contenedores individuales o, cuando sea relevante, aplic
 
 La *extensión de la Colección de Aplicaciones SUSE* en Rancher Desktop añade una pestaña dedicada en la interfaz de usuario. Navegas por el catálogo, configuras valores e instalas con un clic: la complejidad de Helm está oculta.
 
+[#_4_2_why_application_collection_over_public_registries]
 === 4.2 ¿Por qué la Colección de Aplicaciones SUSE sobre registros públicos?
 
 |===
@@ -201,6 +213,7 @@ La *extensión de la Colección de Aplicaciones SUSE* en Rancher Desktop añade 
 | SBOM, procedencia, atestaciones, SLSA L3
 |===
 
+[#_4_3_authentication]
 === 4.3 Autenticación
 
 La autenticación en el registro de la Colección de Aplicaciones SUSE se configura automáticamente mediante la extensión de la Colección de Aplicaciones SUSE en Rancher Desktop.
@@ -235,10 +248,12 @@ kubectl create secret docker-registry application-collection \
 
 Entonces añade `imagePullSecrets: [{name: application-collection}]` en tus valores de Helm.
 
+[#_5_installing_tilt]
 == 5. Instalando Tilt
 
 *Tilt* es una herramienta de código abierto que automatiza cada paso del bucle interno, desde el cambio de código hasta el nuevo despliegue. Supervisa tus archivos, reconstruye imágenes, actualiza el clúster y muestra todo en un panel en tiempo real. Consulta https://tilt.dev[tilt.dev].
 
+[#_5_1_macos]
 === 5.1 macOS
 
 [,bash]
@@ -246,6 +261,7 @@ Entonces añade `imagePullSecrets: [{name: application-collection}]` en tus valo
 brew install tilt
 ----
 
+[#_5_2_linux_suse_and_others]
 === 5.2 Linux (SUSE y otros)
 
 [,bash]
@@ -260,6 +276,7 @@ El script detecta tu arquitectura y coloca el binario en tu `$PATH` (`~/.local/b
 tilt version
 ----
 
+[#_5_3_windows]
 === 5.3 Windows
 
 En PowerShell:
@@ -276,6 +293,7 @@ Si tienes https://scoop.sh[Scoop] instalado, el script lo utilizará automática
 tilt version
 ----
 
+[#_5_4_tilt_rancher_desktop]
 === 5.4 Tilt + Rancher Desktop
 
 Tilt se ejecuta *en el host* (no dentro de un contenedor) y utiliza directamente las CLIs instaladas por Rancher Desktop: `docker`, `kubectl`, `helm`. Detecta automáticamente Rancher Desktop (desde Tilt v0.25.1+) cuando el entorno de ejecución de contenedor es dockerd. Luego sabe que las imágenes construidas localmente están directamente disponibles en el clúster, y *salta el push*.
@@ -287,12 +305,14 @@ Si Tilt no detecta automáticamente tu clúster, añade esta línea en la parte 
 allow_k8s_contexts('rancher-desktop')
 ----
 
+[#_6_the_demo_message_wall_with_observability]
 == 6. La demostración: Muro de mensajes con observabilidad
 
 Esta sección recorre la demostración completa. Muestra el flujo de trabajo del bucle interno: una aplicación Node.js "`message wall`" conectada a PostgreSQL, con Keycloak para autenticación, instrumentada con Prometheus y visualizada en Grafana. Todo está instalado desde SUSE Application Collection.
 
 El código fuente completo está disponible en GitHub: https://github.com/fxHouard/Rancher-Developer-Access-Demo[fxHouard/Rancher-Developer-Access-Demo].
 
+[#_6_1_project_structure]
 === 6.1 Estructura del proyecto
 
 ----
@@ -318,6 +338,7 @@ Rancher-Developer-Access-Demo/
 +-- package.json
 ----
 
+[#_6_2_the_package_json]
 === 6.2 El package.json
 
 [,json]
@@ -339,6 +360,7 @@ Rancher-Developer-Access-Demo/
 
 Solo dos dependencias: `pg` para PostgreSQL y `prom-client` para exponer métricas de Prometheus.
 
+[#_6_3_the_application_src_server_js]
 === 6.3 La aplicación (src/server.js)
 
 La aplicación es un muro de mensajes interactivo con una interfaz web integrada. Expone métricas de Prometheus para la observabilidad. Aquí están las partes clave: el archivo completo está en el repositorio.
@@ -448,6 +470,7 @@ ____
 *demo de actualización en vivo* – Cambia la constante `ACCENT_COLOR` en la línea 9, guarda. En ~2 segundos, el color del muro cambia sin perder mensajes. Esa es la actualización en vivo de Tilt en acción.
 ____
 
+[#_6_4_the_dockerfile]
 === 6.4 El Dockerfile
 
 [,dockerfile]
@@ -466,6 +489,7 @@ ____
 En producción, utilizarías una construcción de múltiples etapas para separar el paso `npm install` (imagen de desarrollo con npm) de la imagen final (imagen mínima de `nodejs:24`, sin npm ni herramientas de construcción). Aquí mantenemos un Dockerfile simple para la demostración. Consulta link:#89-minimal-images[Ir más allá: imágenes mínimas].
 ____
 
+[#_6_5_the_kubernetes_manifests]
 === 6.5 Los manifiestos de Kubernetes
 
 *k8s/deployment.yaml:*
@@ -544,6 +568,7 @@ spec:
       targetPort: 3000
 ----
 
+[#_6_6_installing_postgresql_prometheus_and_grafana]
 === 6.6 Instalando PostgreSQL, Prometheus y Grafana
 
 Los tres son servicios de infraestructura – instálalos una vez a través de Rancher Desktop, no en cada `tilt up`. Persisten entre las sesiones de desarrollo.
@@ -629,6 +654,7 @@ ____
 El chart de Helm para PostgreSQL crea automáticamente el usuario, la base de datos y un servicio llamado `<release-name>-postgresql`. El Tiltfile detecta automáticamente este servicio a través de la etiqueta `app.kubernetes.io/name=postgresql` – no es necesario recordar el nombre de la versión.
 ____
 
+[#_6_7_keycloak_authentication_without_a_helm_chart]
 === 6.7 Keycloak: autenticación sin un chart de Helm
 
 Keycloak proporciona autenticación OAuth2 / OpenID Connect para el Message Wall. Los usuarios inician sesión, y la aplicación verifica su token de identidad antes de permitirles publicar o eliminar mensajes.
@@ -693,6 +719,7 @@ ____
 
 El Tiltfile también ejecuta un script de configuración a través de la API REST de administración como una alternativa. El script es idempotente: verifica si el dominio ya existe, obtiene un token de administrador y crea el dominio si es necesario. Esto maneja el caso en el que la importación del ConfigMap no se recoge (por ejemplo, Keycloak ya estaba en funcionamiento antes de que se creara el ConfigMap).
 
+[#_6_8_the_grafana_dashboard_auto_provisioned_configmap]
 === 6.8 El panel de control de Grafana (ConfigMap auto-provisionado)
 
 El panel de control de Grafana está definido en un ConfigMap de Kubernetes. Gracias al sidecar habilitado en el paso anterior, se carga automáticamente – cero importación manual.
@@ -777,6 +804,7 @@ ____
 *Provisionamiento declarativo* – El panel de control está en Git, versionado con el código. Si lo modificas en Grafana (añadiendo paneles, cambiando consultas), expórtalo y actualiza el ConfigMap para que los cambios no se pierdan en el próximo nuevo despliegue. Este es el enfoque de *infraestructura como código* aplicado a la observabilidad.
 ____
 
+[#_6_9_the_complete_tiltfile]
 === 6.9 El archivo Tiltfile completo
 
 [,python]
@@ -938,6 +966,7 @@ data:
 
 *Condicionalidad* – El bloque de monitoreo es condicional (`if grafana_svc` / `if prometheus_svc`). Si Prometheus y Grafana no están instalados, el Tiltfile sigue funcionando – solo se requieren la app y PostgreSQL. La observabilidad es una ventaja opcional.
 
+[#_6_10_running_the_demo]
 === 6.10 Ejecutando la demostración
 
 [,bash]
@@ -981,6 +1010,7 @@ tilt up
 #    -> save -> ~2 sec -> the color changes
 ----
 
+[#_6_11_what_happens_under_the_hood]
 === 6.11 Qué sucede tras bambalinas
 
 ----
@@ -1015,6 +1045,7 @@ tilt up
    +-- Dev sees the impact of their changes in real time
 ----
 
+[#_6_12_port_forwarding_explained]
 === 6.12 Explicación del reenvío de puertos
 
 Tilt gestiona el reenvío de puertos automáticamente a través de `port_forwards` en `k8s_resource()`. Es el equivalente a `kubectl port-forward`, pero integrado en el ciclo de vida de Tilt (reiniciado automáticamente si el pod es recreado).
@@ -1038,6 +1069,7 @@ postgresql://user:pass@demo-db-postgresql.default.svc.cluster.local:5432/mydb
 
 Desde tu máquina local (por ejemplo, para un cliente SQL): `kubectl port-forward svc/demo-db-postgresql 5432:5432`.
 
+[#_7_the_complete_workflow]
 == 7. El flujo de trabajo completo
 
 |===
@@ -1084,10 +1116,12 @@ Desde tu máquina local (por ejemplo, para un cliente SQL): `kubectl port-forwar
 | Canary / Azul-verde con análisis
 |===
 
+[#_8_going_further]
 == 8. Ir más allá
 
 La demostración anterior cubre los elementos esenciales del bucle interno. Esta sección presenta herramientas y prácticas adicionales que complementan el flujo de trabajo a medida que tu proyecto crece.
 
+[#_8_1_dev_containers_the_reproducible_environment]
 === 8.1 Contenedores de desarrollo: el entorno reproducible
 
 El principio: tu entorno de desarrollo está definido *en código* (`.devcontainer/`). Cada desarrollador que abre el proyecto obtiene exactamente el mismo entorno, con las mismas herramientas, mismas versiones y las mismas extensiones de VS Code.
@@ -1136,6 +1170,7 @@ ____
 
 Cuando VS Code está conectado a un Contenedor de Desarrollo, todas sus terminales integradas se abren *dentro del contenedor*. Pero Tilt debe ejecutarse en el host (donde están Docker, kubectl y Helm). Usa una terminal separada (Terminal.app, iTerm2, Warp, Windows Terminal…) o una segunda ventana de VS Code abierta en la misma carpeta *sin* "`Reopen in Container`".
 
+[#_8_2_resource_requests_and_limits]
 === 8.2 Solicitudes y límites de recursos
 
 En la demostración, la ampliación no tiene ningún bloque `resources` por simplicidad. En producción (o clústeres compartidos), siempre debes definirlos:
@@ -1153,6 +1188,7 @@ resources:
 
 Sin `requests` o `limits`, un pod puede consumir todos los recursos del nodo e impactar en otras cargas de trabajo – el problema *"`noisy neighbor`"*. `requests` son para el planificador (colocación inteligente), `limits` protegen el nodo (limitación de CPU, OOMKill si la memoria excede).
 
+[#_8_3_testcontainers_integration_tests]
 === 8.3 Testcontainers: pruebas de integración
 
 *El concepto:* Testcontainers es una biblioteca que levanta contenedores Docker efímeros en tus pruebas de integración. ¿Necesitas un PostgreSQL para probar tus consultas SQL? Testcontainers lanza uno, ejecuta tus pruebas y lo destruye cuando ha terminado.
@@ -1229,6 +1265,7 @@ describe('Database integration', () => {
 | Desarrollo local diario
 |===
 
+[#_8_4_mirrord_local_debug_on_a_remote_cluster]
 === 8.4 mirrord: depuración local en un clúster remoto
 
 mirrord te permite ejecutar un proceso local mientras lo conectas *a la red y al sistema de archivos de un pod en un clúster remoto de Kubernetes*. El código se ejecuta localmente, pero "`sees`" el entorno del clúster.
@@ -1242,6 +1279,7 @@ ____
 *La combinación ganadora* – Tilt para el bucle interno diario (clúster local), mirrord para depuración ocasional en staging. Las dos herramientas son complementarias.
 ____
 
+[#_8_5_helm_and_kustomize]
 === 8.5 Helm y Kustomize
 
 *Helm* te permite crear plantillas de tus manifiestos de Kubernetes y distribuirlos como "`charts`". Es el equivalente a un gestor de paquetes (npm, zypper…) para Kubernetes. `values.yaml` personaliza los despliegues por entorno (dev, staging, prod). Helm rastrea las versiones desplegadas y permite la reversión.
@@ -1253,6 +1291,7 @@ ____
 *¿Helm o Kustomize?* – Las dos no son mutuamente excluyentes. Un enfoque común: usar Helm para charts externos (bases de datos, monitorización) y Kustomize para personalizar tus propios manifiestos por entorno.
 ____
 
+[#_8_6_security_trivy_and_cosign]
 === 8.6 Seguridad: Trivy y Cosign
 
 *Trivy* (disponible en la Colección de Aplicaciones) escanea tus imágenes de contenedor, archivos de Kubernetes, dependencias y código IaC para detectar vulnerabilidades conocidas (CVEs), configuraciones incorrectas y secretos expuestos.
@@ -1271,6 +1310,7 @@ cosign sign --key cosign.key myregistry/myapp:v1.0
 cosign verify --key cosign.pub myregistry/myapp:v1.0
 ----
 
+[#_8_7_gitops_argo_cd_and_argo_rollouts]
 === 8.7 GitOps: Argo CD y Argo Rollouts
 
 *GitOps* es el principio de que *Git es la única fuente de verdad* para el estado deseado de tu infraestructura y aplicaciones. Una herramienta de despliegue observa el repositorio de Git y reconcilia automáticamente el estado del clúster con el estado declarado en Git.
@@ -1279,6 +1319,7 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 
 *Argo Rollouts* (también en la Colección de Aplicaciones) añade estrategias de despliegue *blue-green* y *canary* a Kubernetes, con análisis automático de métricas para decidir si promover o revertir un despliegue.
 
+[#_8_8_the_12_factor_app_for_kubernetes]
 === 8.8 El "`12 Factor App`" para Kubernetes
 
 * *Configuración a través del entorno:* utiliza ConfigMaps y Secrets, nunca codifiques la configuración en la imagen.
@@ -1288,6 +1329,7 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 * *Comprobaciones de salud:* siempre implementa sondas de vivacidad y de preparación.
 * *Métricas:* expón un `/metrics` punto final de Prometheus. La observabilidad no es un lujo, es un estándar.
 
+[#_8_9_minimal_images]
 === 8.9 Imágenes mínimas
 
 * *BCI Micro:* para binarios estáticos (Go, Rust). Sin gestor de paquetes, superficie de ataque mínima.
@@ -1295,12 +1337,14 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 * *BCI Base:* para casos que requieren zypper/RPM.
 * Construcciones de múltiples etapas: construye con la imagen de desarrollo, copia el resultado en BCI Micro.
 
+[#_8_10_infrastructure_as_code]
 === 8.10 Infraestructura como Código
 
 * Todo está en Git: Dockerfiles, charts de Helm, overlays de Kustomize, Tiltfiles, devcontainer.json, *tableros de Grafana*.
 * No hay manual `kubectl apply` en staging/prod. Todo pasa por GitOps (Argo CD).
 * Los entornos efímeros (entornos de vista previa) se crean automáticamente en cada PR.
 
+[#_9_glossary]
 == 9. Glosario
 
 |===
@@ -1385,6 +1429,7 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 | Política de K8s: `IfNotPresent` = usar imagen local si está disponible
 |===
 
+[#_10_further_reading]
 == 10. Información adicional
 
 * *Rancher Desktop:* https://rancherdesktop.io[rancherdesktop.io]

@@ -7,12 +7,14 @@
 
 _从开发环境到部署 – 内循环、可观测性、GitOps_
 
+[#_1_overview_why_this_guide]
 == 1.概述：为什么要使用本指南？
 
 本指南涵盖Kubernetes开发的*完整价值链*，从初始环境设置到持续部署。目标：使开发人员能够快速使用流行工具、本地群集（Rancher Desktop）和可信镜像（SUSE应用程序集合）提高生产力。
 
 它分为两个部分：首先是一个*动手演示*，让您在几分钟内开始运行。然后是一个*深入了解*部分，涵盖更广泛的生态系统（开发容器、Testcontainers、mirrord、Helm、安全性、GitOps），以便您准备好深化工作流程时使用。
 
+[#_1_1_the_two_loops_of_cloud_native_development]
 === 1.1 云原生开发的两个循环
 
 |===
@@ -40,13 +42,16 @@ ____
 *关键原则* – 内循环必须尽可能快。在代码构建-部署-测试周期中节省的每一秒都会乘以每日更改的数量。良好的内循环意味着每次迭代所需时间从5-10分钟缩短到5-10秒。
 ____
 
+[#_2_overall_architecture]
 == 2.整体架构
 
+[#_2_1_diagram]
 === 2.1 图示
 
 .内循环和外循环架构 – 双方均基于相同的受信任SUSE基础。
 image::inner-outer-loop.png[内循环和外循环架构 – 双方均基于相同的受信任SUSE基础]
 
+[#_2_2_stack_layers]
 === 2.2 堆栈层
 
 |===
@@ -89,12 +94,15 @@ image::inner-outer-loop.png[内循环和外循环架构 – 双方均基于相�
 | 从 Git 进行声明式部署
 |===
 
+[#_3_setting_up_rancher_desktop]
 == 3.设置 Rancher Desktop
 
+[#_3_1_what_is_rancher_desktop]
 === 3.1 什么是 Rancher Desktop？
 
 Rancher Desktop 是一个开源桌面应用程序，提供一个 *本地群集* (k3s) 和一个 *容器运行时* (dockerd 或 containerd)，所有这些都在一个自动管理的虚拟机中。无需安装 Docker Desktop。
 
+[#_3_2_installation_and_configuration]
 === 3.2 安装和配置
 
 . 从 *下载* https://rancherdesktop.io[rancherdesktop.io]。
@@ -119,6 +127,7 @@ ____
 *Rancher Desktop 不是 Docker Desktop。*您不需要 Docker Desktop。Rancher Desktop 提供自己的 Docker 守护程序 (moby/dockerd)。同时安装两者可能会导致套接字冲突。如果您有 Docker Desktop，请禁用它。
 ____
 
+[#_3_3_why_dockerd_moby_when_production_runs_containerd]
 === 3.3 当生产环境运行 containerd 时，为什么选择 dockerd (moby)？
 
 在生产中，Kubernetes 使用 *containerd* 作为运行时。关键见解是：*Rancher Desktop 也如此，即使在 moby 模式下。*k3s 集群始终在 containerd 上运行，无论设置如何。选择 "`dockerd (moby)`" 并不会替代 containerd——它会在其旁边添加 Docker 守护程序，两者共享相同的镜像存储。
@@ -158,8 +167,10 @@ ____
 
 这也是为什么演示 K8s 部署使用 `imagePullPolicy: IfNotPresent` (或 `Never`)：我们告诉 k3s "`use the local image, do not look in a registry`"。
 
+[#_4_suse_application_collection]
 == 4.SUSE 应用程序集合
 
+[#_4_1_what_is_suse_application_collection]
 === 4.1 什么是 SUSE 应用程序集合？
 
 *SUSE 应用程序集合* 是一组以容器镜像和 Helm 图表形式存在的应用程序，由 SUSE 构建、打包、加固和维护——具有 SLSA L3 级别的构建和所有保持操作平稳所需的元数据。这是构建 Kubernetes 应用程序的可信来源。
@@ -175,6 +186,7 @@ ____
 
 Rancher Desktop 中的 *SUSE 应用程序集合扩展* 在用户界面中添加了一个专用标签。您可以浏览目录，配置值，并一键安装 – Helm 的复杂性被隐藏。
 
+[#_4_2_why_application_collection_over_public_registries]
 === 4.2 为什么选择应用程序集合而不是公共注册表？
 
 |===
@@ -201,6 +213,7 @@ Rancher Desktop 中的 *SUSE 应用程序集合扩展* 在用户界面中添加�
 | SBOM、溯源、证明、SLSA L3
 |===
 
+[#_4_3_authentication]
 === 4.3 身份验证
 
 应用程序集合注册表的身份验证由 Rancher Desktop 中的 SUSE 应用程序集合扩展自动配置。
@@ -235,10 +248,12 @@ kubectl create secret docker-registry application-collection \
 
 然后在您的 Helm 值中添加 `imagePullSecrets: [{name: application-collection}]`。
 
+[#_5_installing_tilt]
 == 5.安装 Tilt
 
 *Tilt* 是一个开源工具，自动化内循环的每个步骤，从代码更改到重新部署。它监视您的文件，重建镜像，更新集群，并在实时仪表板中显示所有内容。请参见 https://tilt.dev[tilt.dev]。
 
+[#_5_1_macos]
 === 5.1 macOS
 
 [,bash]
@@ -246,6 +261,7 @@ kubectl create secret docker-registry application-collection \
 brew install tilt
 ----
 
+[#_5_2_linux_suse_and_others]
 === 5.2 Linux（SUSE 和其他）
 
 [,bash]
@@ -260,6 +276,7 @@ curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/instal
 tilt version
 ----
 
+[#_5_3_windows]
 === 5.3 Windows
 
 在 PowerShell 中:
@@ -276,6 +293,7 @@ iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.co
 tilt version
 ----
 
+[#_5_4_tilt_rancher_desktop]
 === 5.4 Tilt + Rancher Desktop
 
 Tilt 在 *主机* 上运行（不在容器内），并直接使用 Rancher Desktop 安装的 CLI：`docker`、`kubectl`、`helm`。当运行时为 dockerd 时，它会自动检测 Rancher Desktop（自 Tilt v0.25.1+ 起）。它知道本地构建的镜像可以直接在集群中使用，因此 *跳过推送*。
@@ -287,12 +305,14 @@ Tilt 在 *主机* 上运行（不在容器内），并直接使用 Rancher Deskt
 allow_k8s_contexts('rancher-desktop')
 ----
 
+[#_6_the_demo_message_wall_with_observability]
 == 6.演示：带有可观测性的消息墙
 
 本节将逐步演示完整流程。它展示了内部循环工作流程：一个 Node.js "`message wall`" 应用程序连接到 PostgreSQL，使用 Keycloak 进行身份验证，使用 Prometheus 进行监控，并在 Grafana 中可视化。所有内容均从 SUSE 应用程序集合中安装。
 
 完整的源代码可在 GitHub 上获取： https://github.com/fxHouard/Rancher-Developer-Access-Demo[fxHouard/Rancher-Developer-Access-Demo]。
 
+[#_6_1_project_structure]
 === 6.1 项目结构
 
 ----
@@ -318,6 +338,7 @@ Rancher-Developer-Access-Demo/
 +-- package.json
 ----
 
+[#_6_2_the_package_json]
 === 6.2 package.json
 
 [,json]
@@ -339,6 +360,7 @@ Rancher-Developer-Access-Demo/
 
 仅有两个依赖项：`pg` 用于 PostgreSQL，`prom-client` 用于暴露 Prometheus 指标。
 
+[#_6_3_the_application_src_server_js]
 === 6.3 应用程序 (src/server.js)
 
 该应用程序是一个带有内置 Web UI 的互动消息墙。它暴露 Prometheus 指标以便于可观测性。以下是关键部分——完整文件在仓库中。
@@ -448,6 +470,7 @@ ____
 *实时更新演示* – 更改第 9 行的 `ACCENT_COLOR` 常量，保存。大约 2 秒后，墙的颜色会改变，消息不会丢失。这就是 Tilt 的实时更新功能在实际运行中的表现。
 ____
 
+[#_6_4_the_dockerfile]
 === 6.4 Dockerfile
 
 [,dockerfile]
@@ -466,6 +489,7 @@ ____
 在生产环境中，您将使用多阶段构建将 `npm install` 步骤（带有 npm 的开发镜像）与最终镜像（最小的 `nodejs:24` 镜像，不带 npm 或构建工具）分开。在这里，我们为演示保留一个简单的 Dockerfile。请参见 link:#89-minimal-images[进一步了解：最小镜像]。
 ____
 
+[#_6_5_the_kubernetes_manifests]
 === 6.5 Kubernetes 清单
 
 *k8s/deployment.yaml:*
@@ -544,6 +568,7 @@ spec:
       targetPort: 3000
 ----
 
+[#_6_6_installing_postgresql_prometheus_and_grafana]
 === 6.6 安装 PostgreSQL、Prometheus 和 Grafana
 
 这三者都是基础设施服务 – 通过 Rancher Desktop 一次性安装，而不是在每个 `tilt up` 上安装。它们在开发会话之间保持持久。
@@ -629,6 +654,7 @@ ____
 PostgreSQL 的 Helm 图表会自动创建用户、数据库和名为 `<release-name>-postgresql` 的服务。Tiltfile 通过 `app.kubernetes.io/name=postgresql` 标签自动检测此服务 – 无需记住发布名称。
 ____
 
+[#_6_7_keycloak_authentication_without_a_helm_chart]
 === 6.7 Keycloak：没有 Helm 图表的身份验证
 
 Keycloak 为消息墙提供 OAuth2 / OpenID Connect 身份验证。用户登录，应用程序在允许他们发布或删除消息之前验证他们的身份词元。
@@ -693,6 +719,7 @@ ____
 
 Tiltfile 还通过 Admin REST API 运行设置脚本作为后备。该脚本是幂等的：它检查领域是否已存在，获取管理员词元，并在需要时创建领域。这处理了 ConfigMap 导入未被识别的情况（例如，Keycloak 在 ConfigMap 创建之前已经在运行）。
 
+[#_6_8_the_grafana_dashboard_auto_provisioned_configmap]
 === 6.8 Grafana 仪表板（自动配置的 ConfigMap）
 
 Grafana 仪表板在 Kubernetes ConfigMap 中定义。由于在上一步中启用了边车，它会自动加载 – 无需手动导入。
@@ -777,6 +804,7 @@ ____
 *声明式配置* – 仪表板在Git中，和代码一起版本控制。如果您在Grafana中修改它（添加面板，改变查询），请导出并更新ConfigMap，以便在下次重新部署时不会丢失更改。这是应用于可观测性的*基础架构即代码*方法。
 ____
 
+[#_6_9_the_complete_tiltfile]
 === 6.9 完整的Tiltfile
 
 [,python]
@@ -938,6 +966,7 @@ data:
 
 *条件性* – 监控块是有条件的 (`if grafana_svc` / `if prometheus_svc`)。如果没有安装 Prometheus 和 Grafana，Tiltfile 仍然可以工作 – 只需要 APP 和 PostgreSQL。可观测性是一个可选的附加功能。
 
+[#_6_10_running_the_demo]
 === 6.10 运行演示
 
 [,bash]
@@ -981,6 +1010,7 @@ tilt up
 #    -> save -> ~2 sec -> the color changes
 ----
 
+[#_6_11_what_happens_under_the_hood]
 === 6.11 背后的工作原理
 
 ----
@@ -1015,6 +1045,7 @@ tilt up
    +-- Dev sees the impact of their changes in real time
 ----
 
+[#_6_12_port_forwarding_explained]
 === 6.12 端口转发解释
 
 Tilt 通过 `port_forwards` 在 `k8s_resource()` 中自动管理端口转发。它相当于 `kubectl port-forward`，但集成在 Tilt 的生命周期中（如果 pod 被重新创建，则自动重启）。
@@ -1038,6 +1069,7 @@ postgresql://user:pass@demo-db-postgresql.default.svc.cluster.local:5432/mydb
 
 从您的本地机器（例如 SQL 客户端）：`kubectl port-forward svc/demo-db-postgresql 5432:5432`.
 
+[#_7_the_complete_workflow]
 == 7.完整的工作流程
 
 |===
@@ -1084,10 +1116,12 @@ postgresql://user:pass@demo-db-postgresql.default.svc.cluster.local:5432/mydb
 | 金丝雀 / 蓝绿部署与分析
 |===
 
+[#_8_going_further]
 == 8.进一步发展
 
 上面的演示涵盖了内部循环的基本要素。本节介绍了随着项目增长而补充工作流程的额外工具和实践。
 
+[#_8_1_dev_containers_the_reproducible_environment]
 === 8.1 开发容器：可重现的环境
 
 原则：您的开发环境在 *代码中* 定义（`.devcontainer/`）。每个打开项目的开发者都获得完全相同的环境，使用相同的工具、相同的版本、相同的 VS Code 扩展。
@@ -1136,6 +1170,7 @@ ____
 
 当 VS Code 连接到开发容器时，所有集成终端都在 *容器内* 打开。但 Tilt 必须在主机上运行（docker、kubectl 和 helm 所在的地方）。使用单独的终端（Terminal.app、iTerm2、Warp、Windows Terminal…）或在同一文件夹中打开的第二个 VS Code 窗口 *不* "`Reopen in Container`"。
 
+[#_8_2_resource_requests_and_limits]
 === 8.2 资源请求和限制
 
 在演示中，为了简单起见，部署没有 `resources` 块。在生产环境（或共享集群）中，您应该始终定义它们：
@@ -1153,6 +1188,7 @@ resources:
 
 没有 `requests` 或 `limits`，一个 pod 可能会消耗所有节点资源并影响其他工作负载——*"`noisy neighbor`"* 问题。`requests` 是为调度器（智能放置）准备的，`limits` 保护节点（处理器 限流，如果内存超出则 OOMKill）。
 
+[#_8_3_testcontainers_integration_tests]
 === 8.3 Testcontainers：集成测试
 
 *概念：*Testcontainers 是一个库，可以在您的集成测试中启动短暂的 Docker 容器。需要一个 PostgreSQL 来测试您的 SQL 查询吗？Testcontainers 启动一个，运行您的测试，并在完成后销毁它。
@@ -1229,6 +1265,7 @@ describe('Database integration', () => {
 | 每日本地开发
 |===
 
+[#_8_4_mirrord_local_debug_on_a_remote_cluster]
 === 8.4 mirrord：在远程集群上进行本地调试
 
 mirrord 允许您在连接到远程 Kubernetes 集群中的 pod 的网络和文件系统时运行本地进程。代码在本地运行，但 "`sees`" 集群环境。
@@ -1242,6 +1279,7 @@ ____
 *制胜组合* - Tilt 用于每日内部循环（本地集群），mirrord 用于偶尔在预发布环境中调试。这两个工具是互补的。
 ____
 
+[#_8_5_helm_and_kustomize]
 === 8.5 Helm 和 Kustomize
 
 *Helm* 让您为 Kubernetes 清单创建模板并将其分发为 "`charts`"。它相当于 Kubernetes 的包管理器（npm、zypper…）。 `values.yaml` 根据环境（开发、预发布、生产）自定义部署。Helm 跟踪已部署的版本并支持回滚。
@@ -1253,6 +1291,7 @@ ____
 *Helm 还是 Kustomize?* – 这两者并不互斥。一种常见的方法：使用 Helm 处理外部图表（数据库、监控），使用 Kustomize 根据环境自定义自己的清单。
 ____
 
+[#_8_6_security_trivy_and_cosign]
 === 8.6 安全性：Trivy 和 Cosign
 
 *Trivy*（在应用程序集合中可用）扫描您的容器镜像、Kubernetes 文件、依赖项以及基础架构即代码，以检测已知漏洞（CVE）、错误配置和暴露的秘密。
@@ -1271,6 +1310,7 @@ cosign sign --key cosign.key myregistry/myapp:v1.0
 cosign verify --key cosign.pub myregistry/myapp:v1.0
 ----
 
+[#_8_7_gitops_argo_cd_and_argo_rollouts]
 === 8.7 GitOps：Argo CD 和 Argo Rollouts
 
 *GitOps* 是这样一个原则：*Git 是您基础设施和应用程序所需状态的唯一真实来源*。一个部署工具监视 Git 储存库，并自动将集群状态与 Git 中声明的状态进行协调。
@@ -1279,6 +1319,7 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 
 *Argo Rollouts*（同样在应用程序集合中）为 Kubernetes 添加了 *蓝绿* 和 *金丝雀* 部署策略，并通过自动指标分析来决定是否提升或回滚部署。
 
+[#_8_8_the_12_factor_app_for_kubernetes]
 === 8.8 "`12 Factor App`" 的 Kubernetes
 
 * *通过环境配置:* 使用 ConfigMaps 和 Secrets，绝不要在镜像中硬编码配置。
@@ -1288,6 +1329,7 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 * *健康检查:* 始终实现活跃性和就绪性探针。
 * *指标:* 暴露一个 `/metrics` Prometheus 端点。可观测性不是奢侈品，而是标准。
 
+[#_8_9_minimal_images]
 === 8.9 最小镜像
 
 * *BCI Micro:* 用于静态二进制文件（Go，Rust）。没有包管理器，最小攻击面。
@@ -1295,12 +1337,14 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 * *BCI Base:* 用于需要 zypper/RPM 的情况。
 * 多阶段构建：使用开发镜像构建，将结果复制到 BCI Micro。
 
+[#_8_10_infrastructure_as_code]
 === 8.10 基础架构即代码
 
 * 一切都在 Git 中：Dockerfile、Helm 图表、Kustomize 覆盖、Tiltfile、devcontainer.json、*Grafana 仪表板*。
 * 在 staging/prod 中没有手动 `kubectl apply`。一切都通过 GitOps（Argo CD）。
 * 临时环境（预览环境）在每个 PR 上自动创建。
 
+[#_9_glossary]
 == 9.词汇表
 
 |===
@@ -1385,6 +1429,7 @@ cosign verify --key cosign.pub myregistry/myapp:v1.0
 | K8s策略：`IfNotPresent` = 如果可用则使用本地镜像
 |===
 
+[#_10_further_reading]
 == 10.更多资料
 
 * *Rancher Desktop:* https://rancherdesktop.io[rancherdesktop.io]
